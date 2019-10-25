@@ -65,7 +65,7 @@ router.post('/refreshToken', (req, res, next) => {
     Axios.post(OAuth, {
         client_id: clientId,
         client_secret: clientSecret,
-        code: code,
+        refresh_token: refreshToken,
         grant_type: "refresh_token"
     }).then(response => {
         res.status(201).json({
@@ -77,6 +77,17 @@ router.post('/refreshToken', (req, res, next) => {
     })
 })
 
+router.post('/patient', (req, res, next) => {
+    let patientid = req.body.patientid;
+    let accessToken = req.body.accessToken;
+    Axios.get(`https://api.1up.health/fhir/dstu2/Patient/${patientid}/$everything`, {
+        headers: {'Authorization': 'bearer ' + accessToken}
+    }).then(response => {
+        res.json(response.data);
+    }).catch(error => {
+        res.json(error);
+    })
+})
 
 
 
