@@ -5,6 +5,8 @@ const OAuth = "https://api.1up.health/fhir/oauth2/token";
 const Axios = require('axios');
 const clientId = "180386c0a6054462a97e819d4498ea2c";
 const clientSecret = "j4UJ1rtUXqSFhe8wqxIhRiHh8m1QmCx5";
+const {Parser} = require('json2csv');
+const parser = new Parser();
 /* GET home page. */
 router.get('/', function (req, res, next) {
     res.render('index', {title: 'Express'});
@@ -80,15 +82,32 @@ router.post('/refreshToken', (req, res, next) => {
 router.post('/patient', (req, res, next) => {
     let patientid = req.body.patientid;
     let accessToken = req.body.accessToken;
-    Axios.get(`https://api.1up.health/fhir/dstu2/Patient/${patientid}/$everything`, {
-        headers: {'Authorization': 'bearer ' + accessToken}
-    }).then(response => {
-        res.json(response.data);
-    }).catch(error => {
-        res.json(error);
-    })
-})
+    let page = 0;
+    let size = 0;
+    let result = [];
+    let url = `https://api.1up.health/fhir/dstu2/Patient/${patientid}/$everything`
+    loop(url);
+    function loop(url) {
 
+        Axios.get(url, {
+            headers: {'Authorization': 'bearer ' + accessToken}
+        }).then(response => {
+            // const csv = parser.parse(response.data.entry.resource);
+            size = response.data.total;
+            console.log(size)
+            result.push(response.data);
+            if (response.data.link) {
+                console.log('url'+ response.data.link[1].url)
+                loop(response.data.link[1].url);
+            } else{
+                console.log(result)
+                res.json(result)
+            }
+        }).catch(error => {
+            console.log(error)
+        })
+    }
+})
 
 
 module.exports = router;
